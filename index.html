@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="StudentHub - Plateforme collaborative de gestion de cours et tâches pour étudiants" />
+    <meta name="theme-color" content="#007bff" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="StudentHub" />
+    
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icon-192x192.png" />
+    
+    <title>StudentHub - Plateforme de cours en ligne</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    
+    <!-- Enregistrer le Service Worker pour la PWA -->
+    <script>
+      // Vérifier si les Service Workers sont supportés
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+              console.log('Service Worker enregistré avec succès:', registration);
+              
+              // Demander la permission pour les notifications
+              if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().then(permission => {
+                  console.log('Permission notifications:', permission);
+                });
+              }
+            })
+            .catch(error => {
+              console.log('Erreur enregistrement Service Worker:', error);
+            });
+        });
+      }
+
+      // Gérer l'installation de l'app (event beforeinstallprompt)
+      let installPrompt = null;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        installPrompt = e;
+        console.log('PWA prête à être installée');
+        
+        // Vous pouvez afficher un bouton "Installer l'app" ici
+        // ou déclencher automatiquement l'installation
+      });
+
+      // Fonction pour installer l'app (à appeler depuis un bouton)
+      window.installPWA = async () => {
+        if (!installPrompt) {
+          console.log('L\'app ne peut pas être installée');
+          return;
+        }
+        installPrompt.prompt();
+        const { outcome } = await installPrompt.userChoice;
+        console.log(`Installation: ${outcome}`);
+        installPrompt = null;
+      };
+
+      // Détecter si l'app est lancée en standalone (mode installé)
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const isStandalone = window.navigator.standalone === true || 
+                           window.matchMedia('(display-mode: standalone)').matches;
+      
+      console.log('Mobile:', isMobile, 'Standalone:', isStandalone);
+    </script>
+  </body>
+</html>
+

@@ -1,11 +1,8 @@
-const CACHE_NAME = 'studenthub-v1';
+const CACHE_NAME = 'studenthub-v2';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/main.js',
-  '/main.jsx',
-  '/style.css',
-  '/App.css'
+  '/manifest.json'
 ];
 
 // Installation du Service Worker
@@ -15,7 +12,10 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Service Worker: Cache ouvert');
-        return cache.addAll(urlsToCache);
+        // Cache each URL individually to avoid failing installation if one asset is missing.
+        return Promise.allSettled(
+          urlsToCache.map(url => cache.add(url))
+        );
       })
       .catch(err => console.log('Service Worker: Erreur lors du caching', err))
   );

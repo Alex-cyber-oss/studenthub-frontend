@@ -42,12 +42,20 @@ self.addEventListener('activate', event => {
 
 // Stratégie de cache : Network first, puis cache en fallback
 self.addEventListener('fetch', event => {
+  // Ne traiter que les requêtes HTTP/HTTPS
+  if (!event.request.url.startsWith('http')) {
+    return;
+  }
+
   // Ne pas cacher les requêtes API
   if (event.request.url.includes('/api/')) {
     event.respondWith(
       fetch(event.request)
         .then(response => response)
-        .catch(() => caches.match('/index.html'))
+        .catch(() => {
+          // Retourner une réponse d'erreur au lieu de undefined
+          return new Response('Network error', { status: 503, statusText: 'Service Unavailable' });
+        })
     );
     return;
   }
@@ -60,7 +68,7 @@ self.addEventListener('fetch', event => {
           return response;
         }
         return fetch(event.request).then(response => {
-          if (!response || response.status !== 200) {
+          if (!response || response.status !== 200 || !response.url.startsWith('http')) {
             return response;
           }
           const responseToCache = response.clone();
@@ -70,7 +78,12 @@ self.addEventListener('fetch', event => {
           return response;
         });
       })
-      .catch(() => caches.match('/index.html'))
+      .catch(() => {
+        // Retourner index.html si disponible, sinon une réponse d'erreur
+        return caches.match('/index.html').then(cached => {
+          return cached || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+        });
+      })
   );
 });
 

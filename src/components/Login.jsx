@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import '../styles/Login.css';
 
@@ -72,7 +72,7 @@ export default function Login() {
         </form>
 
         <p className="signup-link">
-          Pas encore de compte ? <a href="/register">S'inscrire</a>
+          Pas encore de compte ? <Link to="/register">S'inscrire</Link>
         </p>
       </div>
     </div>

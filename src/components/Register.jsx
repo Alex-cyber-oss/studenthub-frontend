@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import Button from './Button';
 import FormField from './FormField';
@@ -55,7 +55,7 @@ const Register = () => {
         </form>
 
         <p className="signup-link">
-          Déjà un compte ? <a href="/login">Se connecter</a>
+          Déjà un compte ? <Link to="/login">Se connecter</Link>
         </p>
       </div>
     </div>

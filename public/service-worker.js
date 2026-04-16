@@ -42,48 +42,57 @@ self.addEventListener('activate', event => {
 
 // Stratégie de cache : Network first, puis cache en fallback
 self.addEventListener('fetch', event => {
-  // Ne traiter que les requêtes HTTP/HTTPS
-  if (!event.request.url.startsWith('http')) {
+  // Eviter les requetes non cacheables/non supportees.
+  if (event.request.method !== 'GET') {
     return;
   }
 
-  // Ne pas cacher les requêtes API
-  if (event.request.url.includes('/api/')) {
+  const requestUrl = new URL(event.request.url);
+  if (!['http:', 'https:'].includes(requestUrl.protocol)) {
+    return;
+  }
+
+  // Ignorer les URLs navigateur/extension qui font echouer Cache.put().
+  if (requestUrl.protocol === 'chrome-extension:' || requestUrl.pathname.startsWith('/__')) {
+    return;
+  }
+
+  // Ne pas mettre en cache les appels API.
+  if (requestUrl.pathname.startsWith('/api/')) {
     event.respondWith(
-      fetch(event.request)
-        .then(response => response)
-        .catch(() => {
-          // Retourner une réponse d'erreur au lieu de undefined
-          return new Response('Network error', { status: 503, statusText: 'Service Unavailable' });
-        })
+      fetch(event.request).catch(() =>
+        new Response('Network error', { status: 503, statusText: 'Service Unavailable' })
+      )
     );
     return;
   }
 
-  // Cacher le reste
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
+    (async () => {
+      const cached = await caches.match(event.request);
+      if (cached) {
+        return cached;
+      }
+
+      try {
+        const networkResponse = await fetch(event.request);
+        if (!networkResponse || networkResponse.status !== 200) {
+          return networkResponse;
         }
-        return fetch(event.request).then(response => {
-          if (!response || response.status !== 200 || !response.url.startsWith('http')) {
-            return response;
-          }
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseToCache);
-          });
-          return response;
-        });
-      })
-      .catch(() => {
-        // Retourner index.html si disponible, sinon une réponse d'erreur
-        return caches.match('/index.html').then(cached => {
-          return cached || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
-        });
-      })
+
+        const responseToCache = networkResponse.clone();
+        event.waitUntil(
+          caches.open(CACHE_NAME)
+            .then(cache => cache.put(event.request, responseToCache))
+            .catch(() => {})
+        );
+
+        return networkResponse;
+      } catch {
+        const offlinePage = await caches.match('/index.html');
+        return offlinePage || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+      }
+    })()
   );
 });
 

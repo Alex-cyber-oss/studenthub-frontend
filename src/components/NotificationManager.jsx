@@ -38,7 +38,7 @@ const NotificationManager = () => {
 
     // Une fois 5 secondes après le chargement, synchroniser les rappels si activé
     const syncTimer = setTimeout(() => {
-      if (isEnabled && !reminderSyncActive) {
+      if (notificationsEnabled && !reminderSyncActive) {
         startReminderSync();
       }
     }, 5000);

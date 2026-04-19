@@ -210,3 +210,36 @@ self.addEventListener('sync', event => {
     );
   }
 });
+// Ajoute ceci à la fin de ton sw.js existant
+
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-everything') {
+    event.waitUntil(processQueue());
+  }
+});
+
+async function processQueue() {
+  const db = await openDB(); // (Il faut copier la fonction openDB ici aussi)
+  const tx = db.transaction('outbox', 'readonly');
+  const requests = await tx.objectStore('outbox').getAll();
+
+  for (const req of requests) {
+    try {
+      const response = await fetch(req.url, {
+        method: req.method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(req.data)
+      });
+
+      if (response.ok) {
+        // Si Laravel a bien reçu, on supprime de la mémoire du téléphone
+        const delTx = db.transaction('outbox', 'readwrite');
+        await delTx.objectStore('outbox').delete(req.id);
+        console.log(`Sync réussie pour : ${req.url}`);
+      }
+    } catch (err) {
+      console.log("Toujours hors-ligne, arrêt de la tentative.");
+      break; 
+    }
+  }
+}

@@ -57,12 +57,32 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Ne pas mettre en cache les appels API.
+// Gestion intelligente des appels API (Mode Hors-ligne activé)
   if (requestUrl.pathname.startsWith('/api/')) {
     event.respondWith(
-      fetch(event.request).catch(() =>
-        new Response('Network error', { status: 503, statusText: 'Service Unavailable' })
-      )
+      caches.open('api-cache').then((cache) => {
+        return fetch(event.request)
+          .then((response) => {
+            // Si on a le réseau, on sauvegarde une copie propre
+            if (response.status === 200) {
+              cache.put(event.request, response.clone());
+            }
+            return response;
+          })
+          .catch(() => {
+            // Si le réseau échoue (Offline), on donne la version du cache
+            return cache.match(event.request).then((cachedResponse) => {
+              if (cachedResponse) {
+                return cachedResponse;
+              }
+              // Si vraiment rien en cache, message d'erreur propre
+              return new Response(JSON.stringify({ error: "Mode hors-ligne : Données non disponibles" }), {
+                headers: { 'Content-Type': 'application/json' },
+                status: 503
+              });
+            });
+          });
+      })
     );
     return;
   }

@@ -12,7 +12,9 @@ const openDB = () => {
     request.onerror = () => reject(request.error);
   });
 };
-const CACHE_NAME = 'studenthub-v2';
+
+const CACHE_NAME = 'studenthub-v3';
+const API_CACHE_NAME = 'api-cache-v1';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -23,15 +25,19 @@ const urlsToCache = [
 self.addEventListener('install', event => {
   console.log('Service Worker: Installation en cours...');
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Service Worker: Cache ouvert');
-        // Cache each URL individually to avoid failing installation if one asset is missing.
-        return Promise.allSettled(
-          urlsToCache.map(url => cache.add(url))
-        );
-      })
-      .catch(err => console.log('Service Worker: Erreur lors du caching', err))
+    Promise.all([
+      caches.open(CACHE_NAME)
+        .then(cache => {
+          console.log('Service Worker: Cache ouvert');
+          return Promise.allSettled(
+            urlsToCache.map(url => cache.add(url))
+          );
+        })
+        .catch(err => console.log('Service Worker: Erreur lors du caching', err)),
+      caches.open(API_CACHE_NAME)
+        .then(cache => console.log('Service Worker: Cache API ouvert'))
+        .catch(err => console.log('Service Worker: Erreur cache API', err))
+    ])
   );
   self.skipWaiting();
 });
@@ -43,7 +49,7 @@ self.addEventListener('activate', event => {
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName !== CACHE_NAME && cacheName !== API_CACHE_NAME) {
             console.log('Service Worker: Suppression ancien cache', cacheName);
             return caches.delete(cacheName);
           }
@@ -74,7 +80,7 @@ self.addEventListener('fetch', event => {
 // Gestion intelligente des appels API (Mode Hors-ligne activé)
   if (requestUrl.pathname.startsWith('/api/')) {
     event.respondWith(
-      caches.open('api-cache').then((cache) => {
+      caches.open(API_CACHE_NAME).then((cache) => {
         return fetch(event.request)
           .then((response) => {
             // Si on a le réseau, on sauvegarde une copie propre

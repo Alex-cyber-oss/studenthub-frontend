@@ -1,3 +1,17 @@
+
+const openDB = () => {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('StudyArenaOffline', 1);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('outbox')) {
+        db.createObjectStore('outbox', { keyPath: 'id', autoIncrement: true });
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+};
 const CACHE_NAME = 'studenthub-v2';
 const urlsToCache = [
   '/',

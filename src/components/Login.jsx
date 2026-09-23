@@ -3,6 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import '../styles/Login.css';
 
+const GUEST_EMAIL = 'guest@guest.com';
+const GUEST_PASSWORD = '123456';
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,7 +24,6 @@ export default function Login() {
     } catch (err) {
       console.error('Erreur connexion:', err);
       if (err.response?.data?.errors) {
-        // Gérer les erreurs de validation Laravel
         const errors = err.response.data.errors;
         const firstError = Object.values(errors)[0];
         setError(Array.isArray(firstError) ? firstError[0] : firstError);
@@ -31,6 +33,12 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fillGuestCredentials = () => {
+    setEmail(GUEST_EMAIL);
+    setPassword(GUEST_PASSWORD);
+    setError('');
   };
 
   return (
@@ -70,6 +78,24 @@ export default function Login() {
             {loading ? 'Connexion en cours...' : 'Se connecter'}
           </button>
         </form>
+
+        <section className="guest-credentials" aria-label="Compte invité">
+          <h3>Accès invité</h3>
+          <p>Utilisez ce compte pour découvrir l’application sans créer de compte personnel.</p>
+          <dl>
+            <div>
+              <dt>Email</dt>
+              <dd>{GUEST_EMAIL}</dd>
+            </div>
+            <div>
+              <dt>Mot de passe</dt>
+              <dd>{GUEST_PASSWORD}</dd>
+            </div>
+          </dl>
+          <button type="button" className="guest-button" onClick={fillGuestCredentials}>
+            Remplir les identifiants invités
+          </button>
+        </section>
 
         <p className="signup-link">
           Pas encore de compte ? <Link to="/register">S'inscrire</Link>

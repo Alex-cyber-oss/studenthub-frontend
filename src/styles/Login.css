@@ -47,6 +47,7 @@
   border-radius: 5px;
   font-size: 1rem;
   transition: border-color 0.3s;
+  box-sizing: border-box;
 }
 
 .form-group input:focus {
@@ -75,6 +76,62 @@ button[type='submit']:hover:not(:disabled) {
 button[type='submit']:disabled {
   background: #999;
   cursor: not-allowed;
+}
+
+.guest-credentials {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  background: #eef2ff;
+  color: #3730a3;
+}
+
+.guest-credentials h3 {
+  margin: 0 0 0.5rem;
+}
+
+.guest-credentials p {
+  margin: 0 0 0.75rem;
+  color: #4338ca;
+  font-size: 0.95rem;
+}
+
+.guest-credentials dl {
+  margin: 0 0 1rem;
+}
+
+.guest-credentials dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.25rem 0;
+}
+
+.guest-credentials dt {
+  font-weight: 600;
+}
+
+.guest-credentials dd {
+  margin: 0;
+  font-family: monospace;
+  color: #1e1b4b;
+  word-break: break-word;
+}
+
+.guest-button {
+  width: 100%;
+  padding: 0.65rem;
+  border: 1px solid #6366f1;
+  border-radius: 5px;
+  background: white;
+  color: #4338ca;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.guest-button:hover {
+  background: #e0e7ff;
 }
 
 .error-message {
